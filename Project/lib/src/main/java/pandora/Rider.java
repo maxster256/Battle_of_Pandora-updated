@@ -2,8 +2,14 @@ package pandora;
 
 public class Rider extends Unit{
 	
-	public Rider(int type,int health, double speed, int pos_x, int pos_y, int strength,double strength_bonus,double defense_bonus, boolean can_far_attack,int view_range)
+	public Rider(int pos_x, int pos_y)
 	{
-		super(type,health,speed,pos_x,pos_y,strength,strength_bonus,defense_bonus,can_far_attack,view_range);
+		super(pos_x,pos_y);
+		type=3;
+		health=100;
+		speed=2;
+		strength=60;
+		strength_bonus=2;
+		defense_bonus=0.3;
 	}
 }
