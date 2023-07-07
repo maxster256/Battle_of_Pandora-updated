@@ -2,8 +2,16 @@ package pandora;
 
 public class Archer extends Unit{
 	
-	public Archer(int type,int health, double speed, int pos_x, int pos_y, int strength,double strength_bonus,double defense_bonus, boolean can_far_attack,int view_range)
+	public Archer(int pos_x, int pos_y)
 	{
-		super(type,health,speed,pos_x,pos_y,strength,strength_bonus,defense_bonus,can_far_attack,view_range);
+		super(pos_x,pos_y);
+		type=4;
+		health=100;
+		speed=1;
+		strength=40;
+		strength_bonus=1.7;
+		defense_bonus=0.25;
+		can_far_attack=true;
+		view_range=5;
 	}
 }
