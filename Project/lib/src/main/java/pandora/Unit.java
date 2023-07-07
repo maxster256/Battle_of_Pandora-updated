@@ -21,9 +21,7 @@ public class Unit implements Interface, Inter_1, Inter_2{
 	
 	public boolean number_of_moves(double move)
 	{
-		if(move<1){	// gdy liczba ruchow wyniesie wiecej niz 0 ale mniej niz 1 instrukcja wykona ponizszy krok.
-			if(random.nextFloat(1)<move) {return true;} //jesli predkosc jest wyrazona jako liczba niecalkowita to instrukcja if wylosuje czy ma wykonac dodatkowy ruch gdy liczba ruchow spadnie ponizej 1
-		}
+		if(random.nextFloat(1)<move) {return true;} //jesli predkosc jest wyrazona jako liczba niecalkowita to instrukcja if wylosuje czy ma wykonac dodatkowy ruch gdy liczba ruchow spadnie ponizej 1
 		return false;
 	}
 	@Override
@@ -33,7 +31,8 @@ public class Unit implements Interface, Inter_1, Inter_2{
 		moves = speed;
 		for(;moves>0;moves--)	//petla wykonuje przewidziana liczbe ruchow dla jednostki np: dla speed=2 petla wykona się 2 razy
 		{
-			if(number_of_moves(moves)==false) {break;}
+			// gdy liczba ruchow wyniesie wiecej niz 0 ale mniej niz 1 instrukcja wykona ponizszy krok.
+			if(moves<1) {if(number_of_moves(moves)==false) {break;}}
 		direction = random.nextInt(4); // GGeneruj losową liczbę między 0-3
 		switch(direction)
 		{
@@ -139,5 +138,10 @@ public class Unit implements Interface, Inter_1, Inter_2{
 		this.defense_bonus=defense_bonus;
 		this.can_far_attack=can_far_attack;
 		this.view_range=view_range;
+	}
+	public Unit(int pos_x, int pos_y)
+	{
+		this.pos_x=pos_x;
+		this.pos_y=pos_y;
 	}
 }
