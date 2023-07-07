@@ -29,8 +29,8 @@ public class Main {
 		File file = new File("sample.txt");										//plik do odczytu gotowych parametrow
 		PrintWriter out = new PrintWriter("simulation.txt");					//plik do zapisu danych symulacji
 		System.out.println("Odczytac parametry wejsciowe z pliku? (1 -> tak):");
-		//use_file=scan.nextInt();	//przypisanie wartosci za pomoca Scannera
-		use_file=1;					//przypisanie wartosci w celu zadzialania taska run
+		use_file=scan.nextInt();	//przypisanie wartosci za pomoca Scannera
+		//use_file=1;					//przypisanie wartosci w celu zadzialania taska run
 		if(use_file==1) {
 			try {										//odczytanie zawartosci pliku sample.txt o ile istnieje
 				FileReader reader = new FileReader(file);
@@ -129,38 +129,26 @@ public class Main {
 		//dla kolonizatorow spawn zaczyna sie od prawej krawedzi mapy
 		//dla navi spawn zaczyna sie od lewej krawedzi mapy
 		//w przypadku wypelnienia ktores z krawedzi, do spawnu przydzielana jest nastepna kolumna w kierunku centrum mapy 
-		for(int i=0;i<soldier;i++)	//petla for dla zolnierzy
+		for(int i=0;i<robot+soldier;i++) //petla for dla robotow i zolnierzy
 		{
 			if(spawn_y<0) {spawn_y=y-1; spawn_x--;}	// komentarz 92
 			while(mapa.FieldContent(spawn_x,spawn_y)=='T'){spawn_y--; if(spawn_y<0) {spawn_y=y-1; spawn_x--;}}	//jesli pole jest drzewem to jednostka nie moze na nim sie pojawic (pojawi sie na pierwszym dostepnym polu 'B' lub '_')
-			col[i+1] = new Soldier(1,100,1,spawn_x,spawn_y,40,0.5,0.2,true,3);
-			spawn_y--;	//przesuniecie spawnu tak aby kazda jednostka miala wlasne miejsce spawnu
-		}
-		for(int i=0;i<robot;i++)	//petla for dla robotow
-		{
-			if(spawn_y<0) {spawn_y=y-1; spawn_x--;} // komentarz 92
-			while(mapa.FieldContent(spawn_x,spawn_y)=='T'){spawn_y--; if(spawn_y<0) {spawn_y=y-1; spawn_x--;}}
-			col[soldier+i+1] = new Robot(2,200,2,spawn_x,spawn_y,60,0.6,0.5,true,3);
-			spawn_y--;
+			if(i<robot)	{col[i+1] = new Robot(spawn_x,spawn_y);}
+			else		{col[i+1] = new Soldier(spawn_x,spawn_y);}
+			spawn_y--; //przesuniecie spawnu tak aby kazda jednostka miala wlasne miejsce spawnu
 		}
 		spawn_x=0;			//umiejscowienie spawnu navi w gornym lewym rogu mapy
 		spawn_y=0;
-		for(int i=0;i<rider;i++)	//petla for dla jezdzcow
+		for(int i=0;i<rider+archer;i++)	//petla for dla jezdzcow i lucznikow
 		{
 			if(spawn_y>=y) {spawn_y=0; spawn_x++;} // komentarz 92
 			while(mapa.FieldContent(spawn_x,spawn_y)=='T'){spawn_y++; if(spawn_y>=y) {spawn_y=0; spawn_x++;}}
-			navi[i] = new Rider(3,100,2,spawn_x,spawn_y,60,2,0.3,false,0);
+			if(i<rider) {navi[i] = new Rider(spawn_x,spawn_y);}
+			else 		{navi[i] = new Archer(spawn_x,spawn_y);}
 			spawn_y++;
 		}
-		for(int i=0;i<archer;i++)	//petla for dla lucznikow
-		{
-			if(spawn_y>=y) {spawn_y=0; spawn_x++;} // komentarz 92
-			while(mapa.FieldContent(spawn_x,spawn_y)=='T'){spawn_y++; if(spawn_y>=y) {spawn_y=0; spawn_x++;}}
-			navi[rider+i] = new Archer(4,100,1,spawn_x,spawn_y,40,1.7,0.25,true,5);
-			spawn_y++;
-		}
-		Bulldozer bulldozer = new Bulldozer(0,2,0.25,x/2,y/2,1000,1,0.85,false,0);
-		col[0] = bulldozer;	//(123-124)utworzenie buldozera i dodanie go do tablicy kolonizatorow na pierwsza pozycje
+		Bulldozer bulldozer = new Bulldozer(x/2,y/2);
+		col[0] = bulldozer;	//(150-151)utworzenie buldozera i dodanie go do tablicy kolonizatorow na pierwsza pozycje
 		
 		if(show_visualization==1){
 		mapa.images();	//zaladowanie plikow .png
@@ -183,7 +171,7 @@ public class Main {
 		int colonizators_counter=col.length;	//zapisanie liczby powstalych jednostek kolonizatorow
 		
 		if(show_visualization==1) {
-		try {Thread.sleep(2000);}			//odczekanie 3 sekund aby uzytkownik mogl otworzyc mape na czas
+		try {Thread.sleep(7000);}			//odczekanie 3 sekund aby uzytkownik mogl otworzyc mape na czas
 		catch (InterruptedException e) {e.printStackTrace();}
 		}
 		
@@ -230,7 +218,7 @@ public class Main {
 		if(colonizators_counter==0) {return 2;}
 		return 0;
 	}
-	//metody average i average_calc do obliczenia sredniej z wykonanych symulacji (tylko dla typu 2 badan
+	//metody average i average_calc do obliczenia sredniej z wykonanych symulacji (tylko dla typu 2 badan)
 	public static double average_calc(ArrayList<ArrayList<Double>> T, int I, int J)
 	{
 		double temp=0;
@@ -247,10 +235,8 @@ public class Main {
 			FileReader reader = new FileReader(file1);
 			BufferedReader in = new BufferedReader(reader);
 		    String line;
-		    ArrayList<Double> num;								//lista sluzaca do przechowania pojedynczej linii z pliku simulation.txt
-		    ArrayList<ArrayList<Double>> T= new ArrayList<>();	//lista przechowania calej zawartosci simulation.txt
-		    ArrayList<Double> sub_final;						//lista bedaca pojedyncza linia do pliku average.txt
-		    ArrayList<ArrayList<Double>> final_Array = new ArrayList<>();	//lista z cala zawartoscia do pliku average.txt
+		    ArrayList<Double> num, sub_final;								//lista num sluzaca do przechowania pojedynczej linii z pliku simulation.txt oraz lista sub_final bedaca pojedyncza linia do pliku average.txt
+		    ArrayList<ArrayList<Double>> T= new ArrayList<>(), final_Array= new ArrayList<>();	//lista T przechowania calej zawartosci simulation.txt oraz lista final_array z cala zawartoscia do pliku average.txt
 		    line=in.readLine();					//odczyt linii tytulowej
 		    while((line=in.readLine())!=null)	//odczyt pozostaych linii
 		    {
