@@ -16,19 +16,23 @@ public class Bulldozer extends Unit{
 		switch(direction)
 		{
 		case 0: // Poruszaj się w gore
-			if (pos_y - 1 >= 0)			 {pos_y--;} break;// Sprawdź, czy nowa pozycja mieści się w granicach siatki. Jesli tak to przejdź na nową pozycję
+			if (pos_y - 1 >= 0)		{pos_y--;} break;// Sprawdź, czy nowa pozycja mieści się w granicach siatki. Jesli tak to przejdź na nową pozycję
 		case 1: // Poruszaj się w dol
-			if (pos_y + 1 < mapa.getY()) {pos_y++;} break;
+			if (pos_y + 1 < mapa.getY()) 	{pos_y++;} break;
 		case 2: // Poruszaj się w lewo
-			if (pos_x - 1 >= 0) 		 {pos_x--;} break;
+			if (pos_x - 1 >= 0) 		{pos_x--;} break;
 		case 3: // Poruszaj się w prawo
-			if (pos_x + 1 < mapa.getX()) {pos_x++;} break;
+			if (pos_x + 1 < mapa.getX()) 	{pos_x++;} break;
 		}
 		if (mapa.FieldContent(pos_x, pos_y)!='_') {mapa.change_map(pos_x,pos_y);} // Sprawdź, czy pole jest puste i zniszcz pole, jeśli nie jest puste
 		}
 	}
-	public Bulldozer(int type,int health, double speed, int pos_x, int pos_y, int strength,double strength_bonus,double defense_bonus, boolean can_far_attack,int view_range)
+	public Bulldozer(int pos_x, int pos_y)
 	{
-		super(type,health,speed,pos_x,pos_y,strength,strength_bonus,defense_bonus,can_far_attack,view_range);
+		super(pos_x,pos_y);
+		type=0;
+		health=2000;
+		speed=0.25;
+		defense_bonus=0.85;
 	}
 }
