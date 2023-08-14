@@ -21,6 +21,7 @@ public class Unit implements Interface, Inter_1, Inter_2{
 	
 	public boolean number_of_moves(double move)
 	{
+		if(moves>1) {return true;}
 		if(random.nextFloat(1)<move) {return true;} //jesli predkosc jest wyrazona jako liczba niecalkowita to instrukcja if wylosuje czy ma wykonac dodatkowy ruch gdy liczba ruchow spadnie ponizej 1
 		return false;
 	}
@@ -28,31 +29,31 @@ public class Unit implements Interface, Inter_1, Inter_2{
 	public void move(Map mapa)
 	{
 		int direction;
-		moves = speed;
-		for(;moves>0;moves--)	//petla wykonuje przewidziana liczbe ruchow dla jednostki np: dla speed=2 petla wykona się 2 razy
+		for(moves=speed;moves>0;moves--)	//petla wykonuje przewidziana liczbe ruchow dla jednostki np: dla speed=2 petla wykona się 2 razy
 		{
 			// gdy liczba ruchow wyniesie wiecej niz 0 ale mniej niz 1 instrukcja wykona ponizszy krok.
-			if(moves<1) {if(number_of_moves(moves)==false) {break;}}
+			if(number_of_moves(moves)==false) {break;}
 		direction = random.nextInt(4); // GGeneruj losową liczbę między 0-3
 		switch(direction)
 		{
 		case 0: //Poruszaj się w górę
 			if (pos_y - 1 >= 0) { // Sprawdź, czy nowa pozycja mieści się w granicach siatki
-       			if (mapa.FieldContent(pos_x, pos_y - 1)!='T') {pos_y--;} // Sprawdz czy pole jest drzewem. Jesli nie, przejdź na nową pozycję
+       			if (mapa.FieldContent(pos_x, pos_y - 1)!='T'||type==0) {pos_y--;} // Sprawdz czy pole jest drzewem. Jesli nie, przejdź na nową pozycję
 			}break;
 		case 1: // Poruszaj się w dół
 			if (pos_y + 1 < mapa.getY()) {
-    			if (mapa.FieldContent(pos_x, pos_y + 1)!='T') {pos_y++;}
+    			if (mapa.FieldContent(pos_x, pos_y + 1)!='T'||type==0) {pos_y++;}
 			}break;
 		case 2: // Poruszaj się w lewo
 			if (pos_x - 1 >= 0) {
-      			if (mapa.FieldContent(pos_x - 1, pos_y)!='T') {pos_x--;}
+      			if (mapa.FieldContent(pos_x - 1, pos_y)!='T'||type==0) {pos_x--;}
 			}break;
 		case 3: // Poruszaj się w prawo
 			if (pos_x + 1 < mapa.getX()) {
-       			if (mapa.FieldContent(pos_x + 1, pos_y)!='T') {pos_x++;}
+       			if (mapa.FieldContent(pos_x + 1, pos_y)!='T'||type==0) {pos_x++;}
 			}break;
 		}
+		if (type==0 && mapa.FieldContent(pos_x, pos_y)!='_') {mapa.change_map(pos_x,pos_y);} // Sprawdź, czy pole jest puste i zniszcz pole, jeśli nie jest puste
 		}
 	}
 	@Override
@@ -63,10 +64,6 @@ public class Unit implements Interface, Inter_1, Inter_2{
 		{
 			if(mapa.FieldContent(pos_x,pos_y)=='_') {((Unit)enemy).health-=strength;}	//atak z pustego pola
 			else {((Unit)enemy).health-=strength*strength_bonus;}						//atak z krzakow
-		}
-		if(((Unit)enemy).health<=0)
-		{
-			((Unit)enemy).pos_x=mapa.getX()+10; ((Unit)enemy).pos_y=mapa.getY()+10;
 		}
 	}
 	@Override
@@ -102,15 +99,11 @@ public class Unit implements Interface, Inter_1, Inter_2{
 				else {((Unit)enemy).health-=strength*strength_bonus*strength_bonus;}		//atak z krzakow
 			}
 		}
-		if(((Unit)enemy).health<=0)
-		{
-			((Unit)enemy).pos_x=mapa.getX()+10; ((Unit)enemy).pos_y=mapa.getY()+10;
-		}
    	}
 	@Override
 	public void find_enemy(Interface[] enemy, Map mapa)
 	{
-		int X, Y, Xe, Ye;
+		int X, Y, Xe, Ye, distance;
 		X=pos_x;
 		Y=pos_y;
 		for(Interface ENEMY : enemy) //petla foreach do znalezienia przeciwnika do zaatakowania
@@ -118,27 +111,15 @@ public class Unit implements Interface, Inter_1, Inter_2{
 			if(((Unit)ENEMY).health>0) {	//uniemozliwienie zaatakowania jednostki juz martwej
 			Xe=((Unit)ENEMY).pos_x;
 			Ye=((Unit)ENEMY).pos_y;
-			int distance = Math.abs(X-Xe)+Math.abs(Y-Ye);
+			distance = Math.abs(X-Xe)+Math.abs(Y-Ye);
 			if(distance<=1) {attack(ENEMY,mapa); pandora.Main.attack_flag=true;} //wykonanie ataku jesli wroga jednostka jest w bezposrednim sasiedztwie (do 1 kratki odleglosci)
 			else if(distance<=view_range && can_far_attack) {far_attack(ENEMY,mapa); pandora.Main.attack_flag=true;} //wykonanie ataku jesli wroga jednostka jest w odleglosci do 3 kratek
-			if(((Unit)ENEMY).health<=0) {pandora.Main.dead_unit_flag=true;}
-			break;} //jesli atak zostal wykonany to zakonczyc szukanie przeciwnika
+			if(((Unit)ENEMY).health<=0)
+			{pandora.Main.dead_unit_flag=true; ((Unit)ENEMY).pos_x=mapa.getX()+10; ((Unit)ENEMY).pos_y=mapa.getY()+10;}
+			if(pandora.Main.attack_flag==true) {break;}} //jesli atak zostal wykonany to zakonczyc szukanie przeciwnika
 		}
 	}
 	
-	public Unit(int type,int health, double speed, int pos_x, int pos_y,int strength,double strength_bonus,double defense_bonus,boolean can_far_attack,int view_range)
-	{
-		this.type=type;	
-		this.health=health;	
-		this.speed=speed;	
-		this.pos_x=pos_x;
-		this.pos_y=pos_y;	
-		this.strength=strength;	
-		this.strength_bonus=strength_bonus;
-		this.defense_bonus=defense_bonus;
-		this.can_far_attack=can_far_attack;
-		this.view_range=view_range;
-	}
 	public Unit(int pos_x, int pos_y)
 	{
 		this.pos_x=pos_x;
