@@ -10,14 +10,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class Main {
-	
+
 	private static int x,y;
 	private static int rider, archer, robot, soldier;
-	private static int density;
-	private static int iterations;
-	private static int repeats;
-	private static int show_visualization;
-	private static int use_file;
+	private static int density, iterations, repeats;
+	private static int show_visualization, use_file;
 	private static int lines_num=50;
 	private static int navi_wins=0, col_wins=0, draws=0;
 	private static int research_type, parameter;
@@ -34,33 +31,52 @@ public class Main {
 	public static void main(String[] args) throws IOException
 	{ 
 		Scanner scan = new Scanner(System.in);
-		File file = new File("sample.txt");										//plik do odczytu gotowych parametrow
 		PrintWriter out = new PrintWriter("simulation.txt");					//plik do zapisu danych symulacji
 		System.out.println("Odczytac parametry wejsciowe z pliku? (1 -> tak):");
-		use_file=scan.nextInt();	//przypisanie wartosci za pomoca Scannera
-		//use_file=1;					//przypisanie wartosci w celu zadzialania taska run
+		//use_file=scan.nextInt();	//przypisanie wartosci za pomoca Scannera
+		use_file=1;				//przypisanie wartosci w celu zadzialania taska run
 		if(use_file==1) {
-			try {										//odczytanie zawartosci pliku sample.txt o ile istnieje
-				FileReader reader = new FileReader(file);
-				BufferedReader in = new BufferedReader(reader);
-			    String sample;
-			    int[] T= new int[9]; int i=0;
-			    while((sample=in.readLine())!=null)
-			    {
-			    	T[i]=Integer.parseInt(sample); i++;	//zamiana sample z typu String na int i przypisanie do tablicy
-			    }
-			    x=T[0]; y=T[1]; rider=T[2]; archer=T[3]; robot=T[4]; soldier=T[5]; iterations=T[6]; density=T[7]; show_visualization=T[8];
-			    create_map(x,y,rider,archer,robot,soldier,iterations,density,show_visualization,out);
-			    in.close();
-			} catch (IOException e) {
-				System.out.println("Błąd odczytu pliku!");
-			} 
+			if(read_data()) {return;}
+			create_map(x,y,rider,archer,robot,soldier,iterations,density,show_visualization,out);
 		}
 		else {	//wywolane jesli dane nie sa odczytywane z gotowego pliku
+			type_data(scan);
+			research_type_switch(out,scan);
+		}
+		out.close();
+		if(research_type==2)
+		{
+			Calculate_average CA = new Calculate_average(lines_num,repeats);
+			CA.prepare_file();
+		}
+		scan.close();
+		System.out.println("Symulacja ukonczona.");
+	}
+	public static boolean read_data()
+	{
+		File file = new File("sample.txt");										//plik do odczytu gotowych parametrow
+		try {										//odczytanie zawartosci pliku sample.txt o ile istnieje
+			FileReader reader = new FileReader(file);
+			BufferedReader in = new BufferedReader(reader);
+			String sample;
+			int[] T= new int[9]; int i=0;
+			while((sample=in.readLine())!=null)
+			{
+				T[i]=Integer.parseInt(sample); i++;	//zamiana sample z typu String na int i przypisanie do tablicy
+			}
+			x=T[0]; y=T[1]; rider=T[2]; archer=T[3]; robot=T[4]; soldier=T[5]; iterations=T[6]; density=T[7]; show_visualization=T[8];
+			in.close();
+		} catch (IOException e) {
+			System.out.println("Błąd odczytu pliku!"); return true;
+		}
+		return false;
+	}
+	public static void type_data(Scanner scan)
+	{
 		System.out.println("Podaj rozmiary mapy:");
 		x = scan.nextInt();
 		y = scan.nextInt();
-		
+
 		System.out.println("Podaj liczebnosc jezdzcow:");
 		rider=scan.nextInt();
 		System.out.println("Podaj liczebnosc lucznikow:");
@@ -79,45 +95,37 @@ public class Main {
 		research_type=scan.nextInt();
 		System.out.println("Podaj liczbe powtorzen symulacji (dla wlaczonej wizualizacji zalecane jest 1):");
 		repeats=scan.nextInt();
-		
-		if(research_type==1)	//wykonanie symulacji dla typu 1 badania
+	}
+	public static void research_type_switch(PrintWriter out, Scanner scan) throws FileNotFoundException {
+		switch(research_type)
 		{
-			System.out.println("Podaj parametr\nzageszczenie lasu -> 1\nliczba lucznikow -> 2\nliczba jezdzcow -> 3\nliczba robotow -> 4\nliczba zolnierzy -> 5");
-			parameter=scan.nextInt();
-			out.println(parameter+";navi_wins;col_wins;draws");
-			for(int j=0;j<101;j+=2)
-			{
-				switch (parameter)
+			case 2:
+				out.println("iteration;navi count;colonizators count;trees;bushes;all map squares");//pierwszy wiersz pliku z danymi zebranymi z symulacji
+				for(int i=0;i<repeats;i++) {create_map(x,y,rider,archer,robot,soldier,iterations,density,show_visualization,out);}
+				break;
+			case 1:
+				System.out.println("Podaj parametr\nzageszczenie lasu -> 1\nliczba lucznikow -> 2\nliczba jezdzcow -> 3\nliczba robotow -> 4\nliczba zolnierzy -> 5");
+				parameter=scan.nextInt();
+				out.println(parameter+";navi_wins;col_wins;draws");
+				for(int j=0;j<101;j+=2)
 				{
-				case 1: density=j; break;
-				case 2: archer=j; break;
-				case 3: rider=j; break;
-				case 4: robot=j; break;
-				case 5: soldier=j; break;
-				}					//przekazanie niezbednych parametrow do wykonania symulacji
-			for(int i=0;i<repeats;i++) {create_map(x,y,rider,archer,robot,soldier,iterations,density,show_visualization,out);}
-			out.println(j+";"+navi_wins+";"+col_wins+";"+draws);
-			navi_wins=0; col_wins=0; draws=0;
-			System.out.println("Done "+j+" %");
-			}
+					switch (parameter)
+					{
+						case 1: density=j; break;
+						case 2: archer=j; break;
+						case 3: rider=j; break;
+						case 4: robot=j; break;
+						case 5: soldier=j; break;
+					}					//przekazanie niezbednych parametrow do wykonania symulacji
+					for(int i=0;i<repeats;i++) {create_map(x,y,rider,archer,robot,soldier,iterations,density,show_visualization,out);}
+					out.println(j+";"+navi_wins+";"+col_wins+";"+draws);
+					navi_wins=0; col_wins=0; draws=0;
+					System.out.println("Done "+j+" %");
+				}
+				break;
+			default: create_map(x,y,rider,archer,robot,soldier,iterations,density,show_visualization,out);//wykonanie wymulacji bez badan
+				break;
 		}
-		else if(research_type==2)	//wykonanie symulacji dla typu 2 badan
-		{
-			out.println("iteration;navi count;colonizators count;trees;bushes;all map squares");//pierwszy wiersz pliku z danymi zebranymi z symulacji
-			for(int i=0;i<repeats;i++) {create_map(x,y,rider,archer,robot,soldier,iterations,density,show_visualization,out);}
-		}
-		else {create_map(x,y,rider,archer,robot,soldier,iterations,density,show_visualization,out);}//wykonanie wymulacji bez badan
-		}
-		out.close();
-		if(research_type==2)
-		{
-		File file1 = new File("simulation.txt");
-		PrintWriter outA = new PrintWriter("average.txt");	//plik w ktorym zamieszczone beda srednie z wykonanych symulacji
-		average(file1,outA);	//wywolanie metody do obliczenia srednich
-		outA.close();
-		}
-		scan.close();
-		System.out.println("Symulacja ukonczona.");
 	}
 	public static void map_border(char team)
 	{
@@ -155,7 +163,7 @@ public class Main {
 		create_teams(mapa,"Archer",archer,spawn_xx,spawn_yy,'N');
 		
 		Bulldozer bulldozer = new Bulldozer(x/2,y/2);
-		colo.add(bulldozer); //utworzenie buldozera i dodanie go do tablicy kolonizatorow na pierwsza pozycje	
+		colo.add(bulldozer); //utworzenie buldozera i dodanie go do tablicy kolonizatorow na ostatnia pozycje
 		
 		if(show_visualization==1) {mapa.images(); mapa.Frame(nav,colo);}
 		//zaladowanie plikow .png oraz wyswietlenie mapy przed rozpoczeciem symulacji
@@ -176,7 +184,7 @@ public class Main {
 		colonizators_counter=colo.size();	//zapisanie liczby powstalych jednostek kolonizatorow
 		
 		if(show_visualization==1) {
-		try {Thread.sleep(7000);}			//odczekanie 3 sekund aby uzytkownik mogl otworzyc mape na czas
+		try {Thread.sleep(3000);}			//odczekanie 3 sekund aby uzytkownik mogl otworzyc mape na czas
 		catch (InterruptedException e) {e.printStackTrace();}
 		}
 		
@@ -222,55 +230,5 @@ public class Main {
 				if(attack_flag==false) {UNIT.move(mapa);} //wykonanie metody move dla pozostalych jednostek (pod warunkiem ze nie wykonaly ataku)
 			}} 						
 		}
-	}
-	//metody average i average_calc do obliczenia sredniej z wykonanych symulacji (tylko dla typu 2 badan)
-	public static double average_calc(ArrayList<ArrayList<Double>> T, int I, int J)
-	{
-		double temp=0;
-		for(int k=0;k<T.size();k+=(lines_num+1))	{temp+=T.get(I+k).get(J);} //sumowanie danego parametru z danej iteracji ze wszystkich powtorzen symulacji
-		return temp/repeats;	//zwrocenie wartosci sredniej
-	}
-	public static void average(File file1, PrintWriter outA)
-	{
-		outA.println("A-iteration;A-navi count;A-colonizators count;A-trees;A-bushes");
-		try {										
-			FileReader reader = new FileReader(file1);
-			BufferedReader in = new BufferedReader(reader);
-		    String line;
-		    ArrayList<Double> num, sub_final;								//lista num sluzaca do przechowania pojedynczej linii z pliku simulation.txt oraz lista sub_final bedaca pojedyncza linia do pliku average.txt
-		    ArrayList<ArrayList<Double>> T= new ArrayList<>(), final_Array= new ArrayList<>();	//lista T przechowania calej zawartosci simulation.txt oraz lista final_array z cala zawartoscia do pliku average.txt
-		    line=in.readLine();					//odczyt linii tytulowej
-		    while((line=in.readLine())!=null)	//odczyt pozostaych linii
-		    {
-		    	num = new ArrayList<>();
-		    	String[] numbers = line.split(";");	//wyodrebnienie wszystkich liczb z pojedynczej linii
-		    	for(int j=0;j<numbers.length;j++)
-		    	{
-		    		num.add(Double.parseDouble(numbers[j]));	//dodanie liczb do listy num
-		    	}
-		    	T.add(num);		//dodanie list num do listy T
-		    }
-		    for(int i=0;i<(lines_num+1);i++)	//petla for do zapelnienia listy final_array
-	    	{
-	    		sub_final = new ArrayList<>();
-	    		for(int j=0;j<T.get(i).size();j++)
-	    		{
-	    			sub_final.add(average_calc(T,i,j));	//dodanie usrednionych wartosci do listy sub_final
-	    		}
-	    		final_Array.add(sub_final);	//dodanie list sub_final do final_array
-	    	}
-		    for(int i=0;i<final_Array.size();i++) //petla for do przepisania zawartosci listy final_array do pliku average.txt
-		    {
-		    	for(int j=0;j<final_Array.get(0).size();j++)
-		    	{
-		    		outA.print(String.format("%.3f;",final_Array.get(i).get(j)));
-		    	}
-		    	outA.println();
-		    }
-		    in.close();
-		    
-		} catch (IOException e) {
-			System.out.println("Błąd odczytu pliku!");
-		} 
 	}
 }
