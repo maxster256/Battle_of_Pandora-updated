@@ -1,8 +1,9 @@
 package pandora;
 
+import java.util.ArrayList;
 import java.util.Random;
 
-public class Unit implements Interface, Inter_1, Inter_2{
+public class Unit implements Interface{
 	
 	int type;
 	int health;
@@ -66,27 +67,31 @@ public class Unit implements Interface, Inter_1, Inter_2{
 			else {((Unit)enemy).health-=strength*strength_bonus;}						//atak z krzakow
 		}
 	}
-	@Override
-	public void far_attack(Interface enemy, Map mapa)
+	public boolean block_attack(Interface enemy, Map mapa)
 	{
 		int i;	//zmienna do okreslenia kierunku ataku
-		boolean attack_blocked=false;	//flaga do okreslenia czy atak zostal zablokowany przez drzewo
 		if(((Unit)enemy).pos_x-pos_x==0)
 		{
 			if(((Unit)enemy).pos_y-pos_y>0) {i=1;}
 			else 							{i=-1;}
-			if(mapa.FieldContent(pos_x,pos_y+i)=='T'||mapa.FieldContent(pos_x,pos_y+2*i)=='T') {attack_blocked=true;}
+			if(mapa.FieldContent(pos_x,pos_y+i)=='T'||mapa.FieldContent(pos_x,pos_y+2*i)=='T') {return true;}
 			else if ((type==3||type==4) && pos_y+4*i>0 && pos_y+4*i<mapa.getY())
-			{if(mapa.FieldContent(pos_x,pos_y+3*i)=='T'||mapa.FieldContent(pos_x,pos_y+4*i)=='T') {attack_blocked=true;}}
+			{if(mapa.FieldContent(pos_x,pos_y+3*i)=='T'||mapa.FieldContent(pos_x,pos_y+4*i)=='T') {return true;}}
 		}
 		else if (((Unit)enemy).pos_y-pos_y==0)
 		{
 			if(((Unit)enemy).pos_x-pos_x>0) {i=1;}
 			else 							{i=-1;}
-			if(mapa.FieldContent(pos_x+i,pos_y)=='T'||mapa.FieldContent(pos_x+2*i,pos_y)=='T') {attack_blocked=true;}
+			if(mapa.FieldContent(pos_x+i,pos_y)=='T'||mapa.FieldContent(pos_x+2*i,pos_y)=='T') {return true;}
 			else if ((type==3||type==4) && pos_x+4*i>0 && pos_x+4*i<mapa.getX())
-			{if(mapa.FieldContent(pos_x+3*i,pos_y)=='T'||mapa.FieldContent(pos_x+4*i,pos_y)=='T') {attack_blocked=true;}}
+			{if(mapa.FieldContent(pos_x+3*i,pos_y)=='T'||mapa.FieldContent(pos_x+4*i,pos_y)=='T') {return true;}}
 		}
+		return false;
+	}
+	@Override
+	public void far_attack(Interface enemy, Map mapa)
+	{
+		boolean attack_blocked=block_attack(enemy,mapa); //flaga do okreslenia czy atak zostal zablokowany przez drzewo
 		if(attack_blocked==false)	//jesli atak nie zostal zablokowany wykonac atak
 		{
 			double defense;
@@ -101,7 +106,7 @@ public class Unit implements Interface, Inter_1, Inter_2{
 		}
    	}
 	@Override
-	public void find_enemy(Interface[] enemy, Map mapa)
+	public void find_enemy(ArrayList<Interface> enemy, Map mapa)
 	{
 		int X, Y, Xe, Ye, distance;
 		X=pos_x;
