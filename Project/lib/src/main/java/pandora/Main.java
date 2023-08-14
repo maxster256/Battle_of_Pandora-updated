@@ -25,6 +25,11 @@ public class Main {
 	
 	private static int navi_counter;
 	private static int colonizators_counter;
+	
+	static ArrayList<Interface> nav = new ArrayList<>();
+	static ArrayList<Interface> colo = new ArrayList<>();
+	
+	private static int spawn_xx, spawn_yy;
 
 	public static void main(String[] args) throws IOException
 	{ 
@@ -114,82 +119,81 @@ public class Main {
 		scan.close();
 		System.out.println("Symulacja ukonczona.");
 	}
+	public static void map_border(char team)
+	{
+		if(team=='N') 		{spawn_yy++; if(spawn_yy>=y) {spawn_yy=0; spawn_xx++;}}
+		else if(team=='C')	{spawn_yy--; if(spawn_yy<0) {spawn_yy=y-1; spawn_xx--;}}
+		else {System.out.println("Blad spawnu!");}
+	}
+	
+	public static void create_teams(Map mapa, String unit, int number_of_units, int spawn_x, int spawn_y, char team)
+	{
+		spawn_xx=spawn_x;
+		spawn_yy=spawn_y;
+		for(int i=0;i<number_of_units;i++)	//petla for dla jezdzcow i lucznikow
+		{
+			do{map_border(team);} while(mapa.FieldContent(spawn_xx,spawn_yy)=='T');
+			switch(unit)
+			{
+			case "Soldier":		colo.add(new Soldier(spawn_xx,spawn_yy));	break;
+			case "Robot": 		colo.add(new Robot(spawn_xx,spawn_yy));	break;
+			case "Rider": 		nav.add(new Rider(spawn_xx,spawn_yy));	break;
+			case "Archer": 		nav.add(new Archer(spawn_xx,spawn_yy));	break;
+			default:	System.out.println("Blad utworzenia jednostki!"); break;
+			}
+		}
+	}
 	
 	public static void create_map(int x, int y, int rider, int archer, int robot, int soldier, int iterations, int density,int show_visualization,PrintWriter out) throws FileNotFoundException //metoda z uwzglednieniem parametrow wejsciowych np ze skryptow
 	{
 		Map mapa = new Map(x,y,density);	//przypisanie mapie podtsawowych wartosci: dlugosc, szerokosc, zageszczenie lasu
 		mapa.generate();					//utworzenie mapy
-		int spawn_x=x-1;					//umiejscowienie spawnu kolonizatorow w dolnym prawym rogu mapy
-		int spawn_y=y-1;		
 		
-		Interface[] navi = new Interface[archer+rider];		//tablica typu Interface dla Navi
-		Interface[] col = new Interface[robot+soldier+1];	//tablica typu Interface dla kolonizatorow
-		//ponizsze pętle for tworza podana wczesniej liczbe jednostek poszczegolnych klas - podana liczbe razy tworza jednostke i dodaja ja do tablicy typu Interface
+		create_teams(mapa,"Soldier",soldier,x-1,y,'C');
+		create_teams(mapa,"Robot",robot,spawn_xx,spawn_yy,'C');
+		create_teams(mapa,"Rider",rider,0,-1,'N');
+		create_teams(mapa,"Archer",archer,spawn_xx,spawn_yy,'N');
 		
-		//dla kolonizatorow i navi jednostki spawnuja sie tak aby zadne jednostki nie dzielily ze soba pola
-		//dla kolonizatorow spawn zaczyna sie od prawej krawedzi mapy
-		//dla navi spawn zaczyna sie od lewej krawedzi mapy
-		//w przypadku wypelnienia ktores z krawedzi, do spawnu przydzielana jest nastepna kolumna w kierunku centrum mapy 
-		for(int i=0;i<robot+soldier;i++) //petla for dla robotow i zolnierzy
-		{
-			if(spawn_y<0) {spawn_y=y-1; spawn_x--;}	// komentarz 132
-			while(mapa.FieldContent(spawn_x,spawn_y)=='T'){spawn_y--; if(spawn_y<0) {spawn_y=y-1; spawn_x--;}}	//jesli pole jest drzewem to jednostka nie moze na nim sie pojawic (pojawi sie na pierwszym dostepnym polu 'B' lub '_')
-			if(i<robot)	{col[i+1] = new Robot(spawn_x,spawn_y);}
-			else		{col[i+1] = new Soldier(spawn_x,spawn_y);}
-			spawn_y--; //przesuniecie spawnu tak aby kazda jednostka miala wlasne miejsce spawnu
-		}
-		spawn_x=0;			//umiejscowienie spawnu navi w gornym lewym rogu mapy
-		spawn_y=0;
-		for(int i=0;i<rider+archer;i++)	//petla for dla jezdzcow i lucznikow
-		{
-			if(spawn_y>=y) {spawn_y=0; spawn_x++;} // komentarz 132
-			while(mapa.FieldContent(spawn_x,spawn_y)=='T'){spawn_y++; if(spawn_y>=y) {spawn_y=0; spawn_x++;}}
-			if(i<rider) {navi[i] = new Rider(spawn_x,spawn_y);}
-			else 		{navi[i] = new Archer(spawn_x,spawn_y);}
-			spawn_y++;
-		}
 		Bulldozer bulldozer = new Bulldozer(x/2,y/2);
-		col[0] = bulldozer;	//(150-151)utworzenie buldozera i dodanie go do tablicy kolonizatorow na pierwsza pozycje
+		colo.add(bulldozer); //utworzenie buldozera i dodanie go do tablicy kolonizatorow na pierwsza pozycje	
 		
-		if(show_visualization==1){
-		mapa.images();	//zaladowanie plikow .png
-		mapa.Frame(navi,col); //wyswietlenie mapy przed rozpoczeciem symulacji
-		}	
-		
-		switch(simulation(mapa,navi,col,show_visualization,out))	//wywolanie symulacji
+		if(show_visualization==1) {mapa.images(); mapa.Frame(nav,colo);}
+		//zaladowanie plikow .png oraz wyswietlenie mapy przed rozpoczeciem symulacji
+
+		switch(simulation(mapa,show_visualization,out))	//wywolanie symulacji
 		{
 			case 0: draws++; if(research_type==0) {System.out.println("Symulacji zakonczyla sie bez rozstrzygniecia");} break;
 			case 1: col_wins++; if(research_type==0) {System.out.println("Symulacji zakonczyla sie zwyciestwem kolonizatorow");} break;
 			case 2: navi_wins++; if(research_type==0) {System.out.println("Symulacji zakonczyla sie zwyciestwem navi");}break;
 			default: break;
 		}
-		if(show_visualization==1) {mapa.Frame(navi,col);} //wyswietlenie zawartosci mapy po zakonczeniu symulacji
+		if(show_visualization==1) {mapa.Frame(nav,colo);} //wyswietlenie zawartosci mapy po zakonczeniu symulacji
 	}
 	
-	public static int simulation(Map mapa, Interface[] navi, Interface[] col,int show_visualization,PrintWriter out) throws FileNotFoundException
+	public static int simulation(Map mapa,int show_visualization,PrintWriter out) throws FileNotFoundException
 	{
-		navi_counter=navi.length;			//zapisanie liczby powstalych jednostek navi
-		colonizators_counter=col.length;	//zapisanie liczby powstalych jednostek kolonizatorow
+		navi_counter=nav.size();			//zapisanie liczby powstalych jednostek navi
+		colonizators_counter=colo.size();	//zapisanie liczby powstalych jednostek kolonizatorow
 		
 		if(show_visualization==1) {
 		try {Thread.sleep(7000);}			//odczekanie 3 sekund aby uzytkownik mogl otworzyc mape na czas
 		catch (InterruptedException e) {e.printStackTrace();}
 		}
 		
-		Bulldozer bulldozer = (Bulldozer)col[0];
+		Bulldozer bulldozer = (Bulldozer)colo.get(colo.size()-1);
 		
 		for(int i=0;i<=iterations;i++)	//petla for do wykonania symulacji
 		{
 			if(show_visualization==1) {
-			mapa.Frame(navi,col);					//wizualizacja mapy podczas danej tury
+			mapa.Frame(nav,colo);					//wizualizacja mapy podczas danej tury
 			try {Thread.sleep(20);}				//odczekanie 0.5 sekundy w celu wyswietlenia pojedynczej iteracji symulacji
 			catch (InterruptedException e) {e.printStackTrace();}
 			}
 			
 			if(bulldozer.health>0) {bulldozer.move(mapa);}					//wykonanie metody moveBulldozer dla buldozera
-			iteration(mapa,navi,col,bulldozer);	//metoda iterujaca navi
-			iteration(mapa,col,navi,bulldozer);	//metoda iterujaca kolonizatorow
-			if(i%(iterations/lines_num)==0 && research_type==2) {out.println(i+";"+navi_counter+";"+colonizators_counter+";"+mapa.getTrees_numb()+";"+mapa.getBushes_numb());}
+			iteration(mapa,nav,colo,bulldozer);	//metoda iterujaca navi
+			iteration(mapa,colo,nav,bulldozer);	//metoda iterujaca kolonizatorow
+			if(i%(iterations/lines_num)==0 && research_type==2) {out.println(i+";"+nav.size()+";"+colo.size()+";"+mapa.getTrees_numb()+";"+mapa.getBushes_numb());}
 			//zapisanie pozadanych danych
 			if(navi_counter==0 && research_type!=2) {return 1;}
 			if(colonizators_counter==0 && research_type!=2) {return 2;}
@@ -198,7 +202,7 @@ public class Main {
 		if(colonizators_counter==0) {return 2;}
 		return 0;
 	}
-	public static void iteration(Map mapa,Interface[] unit, Interface[] enemy, Bulldozer bulldozer)
+	public static void iteration(Map mapa,ArrayList<Interface> unit, ArrayList<Interface> enemy, Bulldozer bulldozer)
 	{
 		for(Interface UNIT : unit)	//petla foreach dla Navi
 		{
@@ -223,10 +227,7 @@ public class Main {
 	public static double average_calc(ArrayList<ArrayList<Double>> T, int I, int J)
 	{
 		double temp=0;
-		for(int k=0;k<T.size();k+=(lines_num+1))
-		{
-			temp+=T.get(I+k).get(J);	//sumowanie danego parametru z danej iteracji ze wszystkich powtorzen symulacji
-		}
+		for(int k=0;k<T.size();k+=(lines_num+1))	{temp+=T.get(I+k).get(J);} //sumowanie danego parametru z danej iteracji ze wszystkich powtorzen symulacji
 		return temp/repeats;	//zwrocenie wartosci sredniej
 	}
 	public static void average(File file1, PrintWriter outA)
