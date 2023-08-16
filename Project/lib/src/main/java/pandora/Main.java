@@ -15,7 +15,7 @@ public class Main {
 	private static int rider, archer, robot, soldier;
 	private static int density, iterations, repeats;
 	private static int show_visualization, use_file;
-	private static int lines_num=50;
+	private static int lines_num=50;						//liczba linijek w ktorych zapisane beda wyniki symulacji w pliku .txt 
 	private static int navi_wins=0, col_wins=0, draws=0;
 	private static int research_type, parameter;
 	static boolean attack_flag, dead_unit_flag; 
@@ -26,7 +26,7 @@ public class Main {
 	static ArrayList<Interface> nav = new ArrayList<>();
 	static ArrayList<Interface> colo = new ArrayList<>();
 	
-	private static int spawn_xx, spawn_yy;
+	private static int spawn_x, spawn_y;
 
 	public static void main(String[] args) throws IOException
 	{ 
@@ -36,7 +36,7 @@ public class Main {
 		//use_file=scan.nextInt();	//przypisanie wartosci za pomoca Scannera
 		use_file=1;				//przypisanie wartosci w celu zadzialania taska run
 		if(use_file==1) {
-			if(read_data()) {return;}
+			if(read_data()) {scan.close(); out.close(); return;}
 			create_map(x,y,rider,archer,robot,soldier,iterations,density,show_visualization,out);
 		}
 		else {	//wywolane jesli dane nie sa odczytywane z gotowego pliku
@@ -127,26 +127,28 @@ public class Main {
 				break;
 		}
 	}
+	//metoda do przesuniecie kolumny spawnu w przypadku gdy poprzednia jest juz pelna
 	public static void map_border(char team)
 	{
-		if(team=='N') 		{spawn_yy++; if(spawn_yy>=y) {spawn_yy=0; spawn_xx++;}}
-		else if(team=='C')	{spawn_yy--; if(spawn_yy<0) {spawn_yy=y-1; spawn_xx--;}}
+		if(team=='N') 		{spawn_y++; if(spawn_y>=y) {spawn_y=0; spawn_x++;}}
+		else if(team=='C')	{spawn_y--; if(spawn_y<0) {spawn_y=y-1; spawn_x--;}}
 		else {System.out.println("Blad spawnu!");}
 	}
 	
-	public static void create_teams(Map mapa, String unit, int number_of_units, int spawn_x, int spawn_y, char team)
+	public static void create_teams(Map mapa, String unit, int number_of_units, int position_x, int position_y, char team)
 	{
-		spawn_xx=spawn_x;
-		spawn_yy=spawn_y;
+		//zapisanie pozycji spawnu w celu generowania robotow w szeregu obok zolnierzy oraz lucznikow obok jezdzcow
+		spawn_x=position_x;
+		spawn_y=position_y;
 		for(int i=0;i<number_of_units;i++)	//petla for dla jezdzcow i lucznikow
 		{
-			do{map_border(team);} while(mapa.FieldContent(spawn_xx,spawn_yy)=='T');
+			do{map_border(team);} while(mapa.FieldContent(spawn_x,spawn_y)=='T');
 			switch(unit)
 			{
-			case "Soldier":		colo.add(new Soldier(spawn_xx,spawn_yy));	break;
-			case "Robot": 		colo.add(new Robot(spawn_xx,spawn_yy));	break;
-			case "Rider": 		nav.add(new Rider(spawn_xx,spawn_yy));	break;
-			case "Archer": 		nav.add(new Archer(spawn_xx,spawn_yy));	break;
+			case "Soldier":		colo.add(new Soldier(spawn_x,spawn_y));	break;
+			case "Robot": 		colo.add(new Robot(spawn_x,spawn_y));	break;
+			case "Rider": 		nav.add(new Rider(spawn_x,spawn_y));	break;
+			case "Archer": 		nav.add(new Archer(spawn_x,spawn_y));	break;
 			default:	System.out.println("Blad utworzenia jednostki!"); break;
 			}
 		}
@@ -158,21 +160,21 @@ public class Main {
 		mapa.generate();					//utworzenie mapy
 		
 		create_teams(mapa,"Soldier",soldier,x-1,y,'C');
-		create_teams(mapa,"Robot",robot,spawn_xx,spawn_yy,'C');
+		create_teams(mapa,"Robot",robot,spawn_x,spawn_y,'C');
 		create_teams(mapa,"Rider",rider,0,-1,'N');
-		create_teams(mapa,"Archer",archer,spawn_xx,spawn_yy,'N');
+		create_teams(mapa,"Archer",archer,spawn_x,spawn_y,'N');
 		
 		Bulldozer bulldozer = new Bulldozer(x/2,y/2);
-		colo.add(bulldozer); //utworzenie buldozera i dodanie go do tablicy kolonizatorow na ostatnia pozycje
+		colo.add(bulldozer); //utworzenie buldozera i dodanie go do listy kolonizatorow na ostatnia pozycje
 		
 		if(show_visualization==1) {mapa.images(); mapa.Frame(nav,colo);}
 		//zaladowanie plikow .png oraz wyswietlenie mapy przed rozpoczeciem symulacji
 
 		switch(simulation(mapa,show_visualization,out))	//wywolanie symulacji
 		{
-			case 0: draws++; if(research_type==0) {System.out.println("Symulacji zakonczyla sie bez rozstrzygniecia");} break;
-			case 1: col_wins++; if(research_type==0) {System.out.println("Symulacji zakonczyla sie zwyciestwem kolonizatorow");} break;
-			case 2: navi_wins++; if(research_type==0) {System.out.println("Symulacji zakonczyla sie zwyciestwem navi");}break;
+			case 0: draws++; if(research_type==0) {System.out.println("Symulacja zakonczyla sie bez rozstrzygniecia");} break;
+			case 1: col_wins++; if(research_type==0) {System.out.println("Symulacja zakonczyla sie zwyciestwem kolonizatorow");} break;
+			case 2: navi_wins++; if(research_type==0) {System.out.println("Symulacja zakonczyla sie zwyciestwem navi");}break;
 			default: break;
 		}
 		if(show_visualization==1) {mapa.Frame(nav,colo);} //wyswietlenie zawartosci mapy po zakonczeniu symulacji
@@ -184,7 +186,7 @@ public class Main {
 		colonizators_counter=colo.size();	//zapisanie liczby powstalych jednostek kolonizatorow
 		
 		if(show_visualization==1) {
-		try {Thread.sleep(3000);}			//odczekanie 3 sekund aby uzytkownik mogl otworzyc mape na czas
+		try {Thread.sleep(3000);}			//odczekanie 3 sekund przed startem symulacji
 		catch (InterruptedException e) {e.printStackTrace();}
 		}
 		
@@ -193,8 +195,8 @@ public class Main {
 		for(int i=0;i<=iterations;i++)	//petla for do wykonania symulacji
 		{
 			if(show_visualization==1) {
-			mapa.Frame(nav,colo);					//wizualizacja mapy podczas danej tury
-			try {Thread.sleep(20);}				//odczekanie 0.5 sekundy w celu wyswietlenia pojedynczej iteracji symulacji
+			mapa.Frame(nav,colo);					//wizualizacja mapy podczas danej tury (iteracji)
+			try {Thread.sleep(500);}				//odczekanie 0.5 sekundy w celu wyswietlenia pojedynczej iteracji symulacji
 			catch (InterruptedException e) {e.printStackTrace();}
 			}
 			
@@ -212,13 +214,13 @@ public class Main {
 	}
 	public static void iteration(Map mapa,ArrayList<Interface> unit, ArrayList<Interface> enemy, Bulldozer bulldozer)
 	{
-		for(Interface UNIT : unit)	//petla foreach dla Navi
+		for(Interface UNIT : unit)	//petla foreach dla podanej druzyny (unit)
 		{
 			if(((Unit)UNIT).health>0 && ((Unit)UNIT).type!=0) {	//uniemozliwienie wykonania czegokolwiek jesli jednostka jest martwa lub jest buldozerem
 			attack_flag=false;
 			dead_unit_flag=false;
 			if(bulldozer.pos_x==((Unit)UNIT).pos_x && bulldozer.pos_y==((Unit)UNIT).pos_y && bulldozer.health>0 && (((Unit)UNIT).type==3 || ((Unit)UNIT).type==4))
-			{bulldozer.attack(UNIT,mapa); navi_counter--;}	//jesli buldozer najechal na dana jednostke Navi to ja zaatakuje (zabije)
+			{((Unit)UNIT).health=0; navi_counter--;}	//jesli buldozer najechal na dana jednostke Navi to ja zaatakuje (zabije)
 			else
 			{
 				UNIT.find_enemy(enemy,mapa);
