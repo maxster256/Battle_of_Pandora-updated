@@ -5,7 +5,7 @@ import java.util.Random;
 
 public class Unit implements Interface{
 	
-	int type;
+	int type;				//typ (rodzaj) jednostki
 	int health;
 	double speed;
 	int pos_x;
@@ -14,9 +14,9 @@ public class Unit implements Interface{
 	double strength_bonus;
 	double defense_bonus;
 	boolean can_far_attack;
-	int view_range;
+	int view_range;			//zasieg ataku
 	
-	double moves;
+	double moves;			//liczba ruchow w metodzie move
 	
 	Random random = new Random();
 	
@@ -60,8 +60,7 @@ public class Unit implements Interface{
 	@Override
 	public void attack(Interface enemy, Map mapa)
 	{
-		if(type==0) {((Unit)enemy).health=0;} //jesli atakujacy to buldozer to zabija przeciwnika
-		else if(random.nextFloat(1)>((Unit)enemy).defense_bonus)	//losowanie szansy na obrone ataku
+		if(random.nextFloat(1)>((Unit)enemy).defense_bonus)	//losowanie szansy na obrone ataku
 		{
 			if(mapa.FieldContent(pos_x,pos_y)=='_') {((Unit)enemy).health-=strength;}	//atak z pustego pola
 			else {((Unit)enemy).health-=strength*strength_bonus;}						//atak z krzakow
@@ -70,6 +69,7 @@ public class Unit implements Interface{
 	public boolean block_attack(Interface enemy, Map mapa)
 	{
 		int i;	//zmienna do okreslenia kierunku ataku
+		//ponizsze instrukcje if zakladaja ze drzewo jest w stanie zablokowac atak tylko w poziomie lub pionie
 		if(((Unit)enemy).pos_x-pos_x==0)
 		{
 			if(((Unit)enemy).pos_y-pos_y>0) {i=1;}
@@ -118,7 +118,7 @@ public class Unit implements Interface{
 			Ye=((Unit)ENEMY).pos_y;
 			distance = Math.abs(X-Xe)+Math.abs(Y-Ye);
 			if(distance<=1) {attack(ENEMY,mapa); pandora.Main.attack_flag=true;} //wykonanie ataku jesli wroga jednostka jest w bezposrednim sasiedztwie (do 1 kratki odleglosci)
-			else if(distance<=view_range && can_far_attack) {far_attack(ENEMY,mapa); pandora.Main.attack_flag=true;} //wykonanie ataku jesli wroga jednostka jest w odleglosci do 3 kratek
+			else if(distance<=view_range && can_far_attack) {far_attack(ENEMY,mapa); pandora.Main.attack_flag=true;} //wykonanie ataku jesli wroga jednostka jest w odleglosci do 3 (lub 5) kratek
 			if(((Unit)ENEMY).health<=0)
 			{pandora.Main.dead_unit_flag=true; ((Unit)ENEMY).pos_x=mapa.getX()+10; ((Unit)ENEMY).pos_y=mapa.getY()+10;}
 			if(pandora.Main.attack_flag==true) {break;}} //jesli atak zostal wykonany to zakonczyc szukanie przeciwnika
