@@ -4,20 +4,22 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class Calculate_average {
-
+	
+	//klasa sluzaca do obliczenia sredniej arytmetycznej z n wykonanych symulacji (dla typu 2 badan)
     private static int lines_num, repeats;
+    
     public Calculate_average(int lines_num, int repeats)
     {
         this.lines_num=lines_num;
         this.repeats=repeats;
     }
-    public static void prepare_file() throws FileNotFoundException {
+    public void prepare_file() throws FileNotFoundException {
         File file1 = new File("simulation.txt");
         PrintWriter outA = new PrintWriter("average.txt");	//plik w ktorym zamieszczone beda srednie z wykonanych symulacji
         average(file1,outA);	//wywolanie metody do obliczenia srednich
         outA.close();
     }
-    //metody average i average_calc do obliczenia sredniej z wykonanych symulacji (tylko dla typu 2 badan)
+    //metody average i average_calc do obliczenia sredniej z wykonanych symulacji
     public static double average_calc(ArrayList<ArrayList<Double>> T, int I, int J)
     {
         double temp=0;
@@ -32,7 +34,7 @@ public class Calculate_average {
             BufferedReader in = new BufferedReader(reader);
             String line;
             ArrayList<Double> num, sub_final;								//lista num sluzaca do przechowania pojedynczej linii z pliku simulation.txt oraz lista sub_final bedaca pojedyncza linia do pliku average.txt
-            ArrayList<ArrayList<Double>> T= new ArrayList<>(), final_Array= new ArrayList<>();	//lista T przechowania calej zawartosci simulation.txt oraz lista final_array z cala zawartoscia do pliku average.txt
+            ArrayList<ArrayList<Double>> T= new ArrayList<>(), final_Array= new ArrayList<>();	//lista T do przechowania calej zawartosci simulation.txt oraz lista final_array z cala zawartoscia do pliku average.txt
             line=in.readLine();					//odczyt linii tytulowej
             while((line=in.readLine())!=null)	//odczyt pozostaych linii
             {
