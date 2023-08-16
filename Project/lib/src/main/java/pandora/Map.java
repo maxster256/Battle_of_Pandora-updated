@@ -71,7 +71,7 @@ public class Map {
         ImageIcon icon = new ImageIcon(file);
         return icon.getImage();
     }
-    public void Frame(Interface[] navi,Interface[] col)
+    public void Frame(ArrayList<Interface> navi,ArrayList<Interface> col)
     {
     	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setPreferredSize(new Dimension(w+width,z+2*height));	//dostosowywanie szerokosci i wysokosci panelu +- do wymiarow ekranu (1920,1080)
@@ -107,12 +107,12 @@ public class Map {
         }
     }
     // metoda wyswietlejaca jednostki na wczesniej wyswietlonej mapie
-    public void displayUnits(Graphics g,Interface[] navi,Interface[] col)
+    public void displayUnits(Graphics g,ArrayList<Interface> navi,ArrayList<Interface> col)
     {
-    	ArrayList<Interface[]> list = new ArrayList<>();
+    	ArrayList<ArrayList<Interface>> list = new ArrayList<>();
     	list.add(navi);
     	list.add(col);
-    	for(Interface [] team : list)
+    	for(ArrayList<Interface> team : list)
     	{
     		for(Interface unit : team)
     		{
